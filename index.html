@@ -651,16 +651,6 @@
       },
     ],
 
-    // Cac cau hien ra khi bam nut "Khong" (theo vong)
-    noButtonTexts: [
-      'Đừng mà~ 🥺',
-      'Nghĩ lại đi em 😢',
-      'Anh buồn lắm 💔',
-      'Bấm nút kia đi mà~ 💕',
-      'Em chắc chưa? 🥹',
-      'Thật sự luôn á? 😭',
-    ],
-
     // Cai dat animation — chinh neu muon nhanh/cham hon
     anim: {
       loadingDelayMs:   2400,   // ms truoc khi loading fade out
@@ -690,7 +680,6 @@
     memCounter:    document.getElementById('mem-count'),
     memTextCol:    document.getElementById('mem-text-col'),
     btnYes:        document.getElementById('btn-yes'),
-    btnNo:         document.getElementById('btn-no'),
     endPhoto:      document.getElementById('end-photo'),
     // Live queries — called after buildMemorySlide() inserts elements
     getMemImgs:    () => document.querySelectorAll('#s3 .mem-img'),
@@ -1193,25 +1182,6 @@
   }
 
   /* ============================================================
-     "NO" BUTTON — Runs away on every interaction
-     ============================================================ */
-  let noClickCount = 0;
-
-  function moveNoButton() {
-    const btn = DOM.btnNo;
-    btn.style.position = 'fixed';
-    btn.style.zIndex   = '200';
-    btn.style.left     = Math.random() * (innerWidth  - btn.offsetWidth  - 20) + 'px';
-    btn.style.top      = Math.random() * (innerHeight - btn.offsetHeight - 20) + 'px';
-    btn.textContent    = CONFIG.noButtonTexts[noClickCount % CONFIG.noButtonTexts.length];
-    noClickCount++;
-  }
-
-  DOM.btnNo.addEventListener('mouseenter', moveNoButton);
-  DOM.btnNo.addEventListener('click',      moveNoButton);
-  DOM.btnNo.addEventListener('touchstart', e => { e.preventDefault(); moveNoButton(); });
-
-  /* ============================================================
      "YES" BUTTON — Trigger ending sequence
      ============================================================ */
   DOM.btnYes.addEventListener('click', async () => {
@@ -1220,8 +1190,6 @@
     for (let i = 0; i < 25; i++) spawnHeart();
 
     await wait(900);
-    DOM.btnNo.style.display = 'none';
-
     await showSlide(6);
     await playSlideTexts(document.getElementById('s6'), { holdMs: 2500, lastStay: true });
 
