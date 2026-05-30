@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>QR Code Generator</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,#0f1230,#2b0b3a);font-family:'Segoe UI',sans-serif;color:#fff}
+.card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:40px;text-align:center;max-width:420px;width:90%}
+h1{font-size:24px;margin-bottom:8px}
+p{color:rgba(255,255,255,.6);font-size:14px;margin-bottom:24px}
+input{width:100%;padding:14px 18px;border:2px solid rgba(255,255,255,.1);border-radius:12px;background:rgba(255,255,255,.05);color:#fff;font-size:15px;outline:none;transition:border-color .3s}
+input:focus{border-color:#e91e63}
+button{margin-top:14px;padding:14px 32px;border:none;border-radius:999px;background:linear-gradient(135deg,#e91e63,#f06292);color:#fff;font-size:16px;font-weight:600;cursor:pointer;transition:all .3s}
+button:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(233,30,99,.3)}
+#qr{margin-top:24px;display:inline-block;background:#fff;padding:12px;border-radius:12px}
+#dl{display:none;margin-top:16px;padding:12px 28px;border:2px solid rgba(255,255,255,.15);border-radius:999px;background:transparent;color:#f48fb1;font-size:14px;cursor:pointer;transition:all .3s}
+#dl:hover{background:rgba(255,255,255,.06)}
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>💕 QR Code Generator</h1>
+  <p>Nhập URL trang web cầu hôn để tạo mã QR</p>
+  <input type="url" id="url" placeholder="https://username.github.io/love" value=""/>
+  <br/>
+  <button onclick="gen()">Tạo mã QR</button>
+  <div id="qr"></div>
+  <button id="dl" onclick="download()">⬇ Tải ảnh QR</button>
+</div>
+<script>
+let qrObj;
+function gen(){
+  const url=document.getElementById('url').value.trim();
+  if(!url){alert('Vui lòng nhập URL');return}
+  const el=document.getElementById('qr');
+  el.innerHTML='';
+  qrObj=new QRCode(el,{text:url,width:250,height:250,colorDark:'#1a0a2e',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.H});
+  document.getElementById('dl').style.display='inline-block';
+}
+function download(){
+  const canvas=document.querySelector('#qr canvas');
+  if(!canvas)return;
+  const a=document.createElement('a');
+  a.download='love-qr.png';
+  a.href=canvas.toDataURL('image/png');
+  a.click();
+}
+</script>
+</body>
+</html>

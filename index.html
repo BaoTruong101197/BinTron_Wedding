@@ -1,0 +1,1308 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>🎂 Happy Birthday!</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Quicksand:wght@300;400;500;600&family=Dancing+Script:wght@400;700&display=swap"
+    rel="stylesheet"
+  />
+
+  <!-- GSAP animation library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+
+  <style>
+    /* ============================================================
+       CSS CUSTOM PROPERTIES — Chinh mau, font, spacing tai day
+       ============================================================ */
+    :root {
+      --color-bg:           #07041a;
+      --color-pink:         #e91e63;
+      --color-pink-light:   #f48fb1;
+      --color-gold:         #ffd700;
+      --color-soft:         #ffeef6;
+
+      --font-display:  'Great Vibes', cursive;
+      --font-script:   'Dancing Script', cursive;
+      --font-serif:    'Playfair Display', serif;
+      --font-body:     'Quicksand', sans-serif;
+
+      --slide-max-width:    860px;
+      --slide-padding:      30px;
+      --border-radius-pill: 999px;
+    }
+
+    /* ============================================================
+       RESET & BASE
+       ============================================================ */
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      height: 100%;
+      overflow: hidden;
+      font-family: var(--font-body);
+      background: var(--color-bg);
+      color: #fff;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ============================================================
+       AURORA BACKGROUND — Animated blurred color orbs
+       ============================================================ */
+    #aurora {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(90px);
+      will-change: transform;
+      opacity: 0.9;
+    }
+
+    .o1 {
+      width: 75vw; height: 75vw;
+      background: radial-gradient(circle, rgba(219,39,119,.28) 0%, transparent 65%);
+      top: -20%; left: -20%;
+      animation: orb-float-1 22s ease-in-out infinite alternate;
+    }
+    .o2 {
+      width: 65vw; height: 65vw;
+      background: radial-gradient(circle, rgba(91,33,182,.35) 0%, transparent 65%);
+      top: 10%; right: -25%;
+      animation: orb-float-2 28s ease-in-out infinite alternate;
+    }
+    .o3 {
+      width: 55vw; height: 55vw;
+      background: radial-gradient(circle, rgba(233,30,99,.22) 0%, transparent 65%);
+      bottom: -15%; left: 15%;
+      animation: orb-float-3 19s ease-in-out infinite alternate;
+    }
+    .o4 {
+      width: 45vw; height: 45vw;
+      background: radial-gradient(circle, rgba(124,58,237,.28) 0%, transparent 65%);
+      top: 45%; right: 0%;
+      animation: orb-float-4 24s ease-in-out infinite alternate;
+    }
+    .o5 {
+      width: 35vw; height: 35vw;
+      background: radial-gradient(circle, rgba(236,72,153,.18) 0%, transparent 65%);
+      top: 60%; left: 40%;
+      animation: orb-float-5 17s ease-in-out infinite alternate;
+    }
+
+    @keyframes orb-float-1 { to { transform: translate(12vw,  10vh) scale(1.15); } }
+    @keyframes orb-float-2 { to { transform: translate(-14vw,  8vh) scale(0.88); } }
+    @keyframes orb-float-3 { to { transform: translate(8vw,  -12vh) scale(1.12); } }
+    @keyframes orb-float-4 { to { transform: translate(-10vw, -8vh) scale(1.2);  } }
+    @keyframes orb-float-5 { to { transform: translate(6vw,   10vh) scale(0.85); } }
+
+    /* ============================================================
+       CANVAS LAYERS — Particle effects (z-index stacking order)
+       ============================================================ */
+    #hearts-canvas,
+    #fw-canvas,
+    #conf-canvas,
+    #stars-canvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    #hearts-canvas { z-index: 15;  }
+    #stars-canvas  { z-index: 1;   opacity: 0; }
+    #fw-canvas     { z-index: 100; }
+    #conf-canvas   { z-index: 101; }
+
+    /* ============================================================
+       SLIDE SYSTEM — Full-screen slides with 3D flip transitions
+       ============================================================ */
+    .slide {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      padding: var(--slide-padding);
+      z-index: 1;
+      opacity: 0;
+      visibility: hidden;
+    }
+
+    .slide.active {
+      z-index: 10;
+      visibility: visible;
+    }
+
+    /* Centered content wrapper inside each slide */
+    .slide-inner {
+      position: relative;
+      width: min(90vw, var(--slide-max-width));
+      min-height: 70vh;
+    }
+
+    /* Each [data-g] child is absolutely centered — GSAP animates them in/out */
+    .slide-inner > [data-g] {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 100%;
+      text-align: center;
+    }
+
+    /* ============================================================
+       LOADING SCREEN
+       ============================================================ */
+    #slide-loading {
+      z-index: 200;
+      background: radial-gradient(ellipse at 50% 50%, #1a0a2e, #0a0618 70%);
+      visibility: visible;
+      opacity: 1;
+    }
+
+    /* Triple spinning ring */
+    .ld-ring {
+      width: 80px;
+      height: 80px;
+      position: relative;
+      margin-bottom: 22px;
+    }
+
+    .ld-ring span {
+      position: absolute;
+      inset: 0;
+      border: 3px solid transparent;
+      border-top-color: var(--color-pink);
+      border-radius: 50%;
+      animation: spin 1.2s linear infinite;
+    }
+
+    .ld-ring span:nth-child(2) {
+      inset: 8px;
+      border-top-color: var(--color-pink-light);
+      animation-duration: 1.8s;
+      animation-direction: reverse;
+    }
+
+    .ld-ring span:nth-child(3) {
+      inset: 16px;
+      border-top-color: var(--color-gold);
+      animation-duration: 2.4s;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .ld-text {
+      font-family: var(--font-display);
+      font-size: clamp(26px, 6vw, 44px);
+      color: var(--color-pink);
+      text-shadow: 0 0 30px rgba(233,30,99,.25);
+    }
+
+    .ld-sub {
+      margin-top: 6px;
+      font-size: 13px;
+      color: var(--color-pink-light);
+      letter-spacing: 2px;
+      animation: pulse 1.5s ease infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: .4; }
+      50%       { opacity: 1;  }
+    }
+
+    /* ============================================================
+       TYPOGRAPHY UTILITY CLASSES
+       ============================================================ */
+    .t-cursive { font-family: var(--font-script);  }
+    .t-vibes   { font-family: var(--font-display); }
+    .t-serif   { font-family: var(--font-serif);   }
+    .t-pink    { color: var(--color-pink);       }
+    .t-gold    { color: var(--color-gold);       }
+    .t-soft    { color: var(--color-soft);       }
+    .t-sub     { color: rgba(255,255,255,.5);    }
+
+    .t-body {
+      font-family: var(--font-serif);
+      font-style: italic;
+      line-height: 1.8;
+      color: var(--color-soft);
+    }
+
+    /* ============================================================
+       S3 — MEMORY SPLIT LAYOUT  (photo left | text right)
+       ============================================================ */
+    #s3 { padding: 0; }
+
+    .mem-wrap {
+      position: absolute;
+      inset: 0;
+      display: flex;
+    }
+
+    /* Left column: photo frame */
+    .mem-photo-col {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 50px 20px 50px 50px;
+    }
+
+    .mem-frame {
+      position: relative;
+      width: 100%;
+      max-width: 380px;
+      aspect-ratio: 3 / 4;
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow: 0 24px 80px rgba(0,0,0,.65);
+    }
+
+    .mem-img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0;
+    }
+
+    .mem-count {
+      position: absolute;
+      bottom: 16px;
+      right: 16px;
+      font-family: var(--font-script);
+      font-size: 15px;
+      color: rgba(255,255,255,.85);
+      background: rgba(0,0,0,.45);
+      padding: 4px 14px;
+      border-radius: var(--border-radius-pill);
+      backdrop-filter: blur(6px);
+    }
+
+    /* Right column: text entries */
+    .mem-text-col {
+      flex: 1;
+      min-width: 0;
+      position: relative;
+    }
+
+    .mem-entry {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 50px 50px 50px 32px;
+      opacity: 0;
+    }
+
+    .mem-num {
+      font-family: var(--font-script);
+      font-size: clamp(17px, 2vw, 22px);
+      color: var(--color-pink-light);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .mem-num::after {
+      content: '';
+      display: block;
+      flex: 0 0 36px;
+      height: 1px;
+      background: rgba(244,143,177,.45);
+    }
+
+    .mem-heading {
+      font-family: var(--font-serif);
+      font-size: clamp(22px, 3vw, 36px);
+      color: var(--color-gold);
+      margin-bottom: 18px;
+      line-height: 1.3;
+      text-shadow: 0 0 30px rgba(255,215,0,.12);
+    }
+
+    .mem-body {
+      font-family: var(--font-serif);
+      font-style: italic;
+      font-size: clamp(15px, 1.6vw, 19px);
+      color: var(--color-soft);
+      line-height: 1.95;
+    }
+
+    /* ============================================================
+       BUTTONS — Yes / No
+       ============================================================ */
+    .btn-yes {
+      padding: 18px 44px;
+      border: none;
+      border-radius: var(--border-radius-pill);
+      background: linear-gradient(135deg, var(--color-gold), #ffab00);
+      color: #1a0a2e;
+      font-family: var(--font-body);
+      font-size: 18px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all .4s;
+      box-shadow: 0 8px 30px rgba(255,215,0,.25);
+      letter-spacing: .5px;
+    }
+
+    .btn-yes:hover {
+      transform: translateY(-4px) scale(1.06);
+      box-shadow: 0 14px 44px rgba(255,215,0,.4);
+    }
+
+    .btn-no {
+      padding: 16px 34px;
+      border: 2px solid rgba(255,255,255,.1);
+      border-radius: var(--border-radius-pill);
+      background: transparent;
+      color: rgba(255,255,255,.55);
+      font-family: var(--font-body);
+      font-size: 15px;
+      cursor: pointer;
+      transition: all .3s;
+    }
+
+    /* ============================================================
+       ENDING SCREEN
+       ============================================================ */
+    .end-photo {
+      width: 180px;
+      height: 180px;
+      border-radius: 50%;
+      object-fit: cover;
+      display: block;
+      margin: 0 auto 20px;
+      border: 4px solid rgba(233,30,99,.3);
+      box-shadow: 0 8px 40px rgba(233,30,99,.2);
+      animation: glow 3s ease infinite;
+    }
+
+    @keyframes glow {
+      0%, 100% { box-shadow: 0 8px 40px rgba(233,30,99,.2); }
+      50%       { box-shadow: 0 8px 60px rgba(233,30,99,.4); }
+    }
+
+
+
+    /* ============================================================
+       SPECIAL EFFECTS
+       ============================================================ */
+
+    /* Falling petals */
+    .petal {
+      position: fixed;
+      pointer-events: none;
+      z-index: 3;
+      opacity: .7;
+      animation: petal-fall linear forwards;
+    }
+
+    @keyframes petal-fall {
+      0%   { transform: translateY(-20px)  rotate(0deg)   translateX(0);     }
+      25%  { transform: translateY(25vh)   rotate(90deg)  translateX(30px);  }
+      50%  { transform: translateY(50vh)   rotate(180deg) translateX(-20px); }
+      75%  { transform: translateY(75vh)   rotate(270deg) translateX(40px);  }
+      100% { transform: translateY(110vh)  rotate(360deg) translateX(-10px); opacity: 0; }
+    }
+
+    /* Floating birthday cake on S1 */
+    .cake {
+      font-size: clamp(70px, 14vw, 120px);
+      animation: cake-float 3s ease-in-out infinite;
+    }
+
+    @keyframes cake-float {
+      0%, 100% { transform: translateY(0);     }
+      50%       { transform: translateY(-12px); }
+    }
+
+    /* Screen shake before proposal */
+    .shake { animation: shake-body .6s ease; }
+
+    @keyframes shake-body {
+      0%, 100% { transform: translate(0);          }
+      10%      { transform: translate(-8px,  4px); }
+      20%      { transform: translate( 8px, -4px); }
+      30%      { transform: translate(-6px,  2px); }
+      40%      { transform: translate( 6px, -2px); }
+      50%      { transform: translate(-4px,  4px); }
+      60%      { transform: translate( 4px, -4px); }
+    }
+
+    /* ============================================================
+       RESPONSIVE — Mobile overrides
+       ============================================================ */
+    @media (max-width: 640px) {
+      /* S3: stack vertically */
+      .mem-wrap      { flex-direction: column; }
+      .mem-photo-col { padding: 24px 24px 10px; flex: 0 0 45%; }
+      .mem-frame     { max-width: none; aspect-ratio: 16 / 9; }
+      .mem-entry     { padding: 16px 24px; }
+
+      /* QR: stack vertically */
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Canvas layers (rendered beneath everything except fireworks/confetti) -->
+  <canvas id="hearts-canvas"></canvas>
+  <canvas id="stars-canvas"></canvas>
+  <canvas id="fw-canvas"></canvas>
+  <canvas id="conf-canvas"></canvas>
+
+  <!-- Aurora background orbs -->
+  <div id="aurora">
+    <div class="orb o1"></div>
+    <div class="orb o2"></div>
+    <div class="orb o3"></div>
+    <div class="orb o4"></div>
+    <div class="orb o5"></div>
+  </div>
+
+  <!-- SLIDE: Loading -->
+  <div class="slide active" id="slide-loading">
+    <div class="ld-ring">
+      <span></span><span></span><span></span>
+    </div>
+    <div class="ld-text">Có ai đó gửi cho em một điều đặc biệt...</div>
+    <div class="ld-sub">đang chuẩn bị...</div>
+  </div>
+
+  <!-- SLIDE S0: Intro -->
+  <div class="slide" id="s0">
+    <div class="slide-inner">
+      <p class="t-cursive" style="font-size:clamp(22px,3.5vw,30px);color:var(--color-pink-light)" data-g>
+        🎈 Hôm nay là một ngày thật đặc biệt...
+      </p>
+      <h1 class="t-vibes" style="font-size:clamp(44px,10vw,86px);color:var(--color-pink);line-height:1.1;margin:10px 0" data-g>
+        <span id="typed"></span>
+      </h1>
+      <p class="t-body" style="font-size:clamp(22px,3.5vw,30px)" data-g>
+        Anh có một điều muốn dành tặng riêng cho em...
+      </p>
+    </div>
+  </div>
+
+  <!-- SLIDE S1: Happy Birthday -->
+  <div class="slide" id="s1">
+    <div class="slide-inner">
+      <div class="cake" data-g>🎂</div>
+      <h2 class="t-vibes t-gold" style="font-size:clamp(36px,8vw,68px);margin:8px 0" data-g>Happy Birthday!</h2>
+      <p class="t-body" style="font-size:clamp(22px,3vw,28px)" data-g>
+        Chúc em sinh nhật thật vui, thật nhiều sức khỏe, và luôn xinh đẹp rạng ngời như bây giờ!
+      </p>
+      <p class="t-body" style="font-size:clamp(22px,3vw,28px)" data-g>
+        Một năm mới đầy điều tuyệt vời đang chờ em! 🌟
+      </p>
+    </div>
+  </div>
+
+  <!-- SLIDE S2: Wishes -->
+  <div class="slide" id="s2">
+    <div class="slide-inner">
+      <p class="t-cursive t-pink" style="font-size:clamp(26px,5vw,40px)" data-g>🎀 Lời chúc từ trái tim</p>
+      <p class="t-body" style="font-size:clamp(22px,3vw,28px)" data-g>
+        Từ khi có em, mỗi ngày của anh đều tràn ngập ánh nắng. Em là lý do anh mỉm cười mỗi sáng. 🌅
+      </p>
+      <p class="t-body" style="font-size:clamp(22px,3vw,28px)" data-g>
+        Cảm ơn em — vì đã xuất hiện, vì đã kiên nhẫn yêu thương anh, vì đã cùng anh đi qua nắng mưa. ☔
+      </p>
+      <p class="t-body" style="font-size:clamp(22px,3vw,28px)" data-g>
+        Sinh nhật em, anh chỉ có một điều ước — được ở bên em mãi mãi. 💕
+      </p>
+    </div>
+  </div>
+
+  <!-- SLIDE S3: Photo memories (split layout) -->
+  <!-- NOTE: Images and text entries are injected from CONFIG.memories (see JS) -->
+  <div class="slide" id="s3">
+    <div class="mem-wrap">
+      <div class="mem-photo-col">
+        <div class="mem-frame" id="mem-frame">
+          <!-- img.mem-img elements inserted by buildMemorySlide() -->
+          <div class="mem-count" id="mem-count">1 / 5</div>
+        </div>
+      </div>
+      <div class="mem-text-col" id="mem-text-col">
+        <!-- .mem-entry elements inserted by buildMemorySlide() -->
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE S4: Twist -->
+  <div class="slide" id="s4">
+    <div class="slide-inner">
+      <p class="t-serif" style="font-size:clamp(20px,4vw,34px);color:rgba(255,255,255,.6);line-height:1.6" data-g>
+        À mà khoan...
+      </p>
+      <p class="t-serif" style="font-size:clamp(20px,4vw,34px);color:rgba(255,255,255,.6);line-height:1.6;margin-top:16px" data-g>
+        Sinh nhật năm nay, anh muốn tặng em một món quà <em class="t-gold">đặc biệt hơn tất cả...</em>
+      </p>
+    </div>
+  </div>
+
+  <!-- SLIDE S5: Proposal -->
+  <div class="slide" id="s5">
+    <div class="slide-inner">
+      <p class="t-cursive" style="font-size:clamp(22px,3.5vw,30px);color:var(--color-pink-light)" data-g>
+        Anh đã suy nghĩ rất nhiều và anh biết rằng...
+      </p>
+      <div data-g style="display:flex;flex-direction:column;align-items:center;gap:20px;width:100%">
+        <h2 class="t-serif t-gold" style="font-size:clamp(22px,4.5vw,38px);line-height:1.4;text-shadow:0 0 40px rgba(255,215,0,.15)">
+          💍 Em ơi, em có muốn cùng anh đi hết quãng đường đời còn lại không?
+        </h2>
+        <p class="t-body" style="font-size:clamp(15px,2.5vw,19px)">Ngoài option "em đồng ý 💖" ra em không còn option nào khác đâu nhaaa</p>
+        <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap">
+          <button class="btn-yes" id="btn-yes">💖 Có, em đồng ý!</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE S6: Ending -->
+  <div class="slide" id="s6">
+    <div class="slide-inner">
+      <div style="font-size:56px;margin-bottom:14px" data-g>💕</div>
+      <h2 class="t-vibes t-pink" style="font-size:clamp(34px,8vw,60px);margin-bottom:12px;text-shadow:0 0 40px rgba(233,30,99,.2)" data-g>
+        Cảm ơn em đã đồng ý!
+      </h2>
+      <p class="t-body" style="font-size:clamp(20px,3vw,26px);max-width:560px;margin:0 auto" data-g>
+        Từ hôm nay, mỗi ngày anh sẽ yêu em nhiều hơn ngày hôm qua. Cảm ơn em đã chọn anh.
+        Anh hứa sẽ mang đến cho em hạnh phúc trọn vẹn nhất. 💕
+      </p>
+      <!-- src injected from CONFIG.endPhoto -->
+      <img class="end-photo" id="end-photo" src="" alt="Us" data-g />
+      <div class="t-cursive" style="font-size:19px;color:var(--color-pink-light);margin-bottom:22px" data-g>
+        Anh &amp; Em — Mãi mãi bên nhau 💍
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+  'use strict';
+
+  /* ============================================================
+     CONFIG
+     ----------------------------------------------------------
+     Chi chinh noi dung TAI DAY — khong can dung vao logic.
+     ============================================================ */
+  const CONFIG = {
+
+    // Text hien thi kieu go may chu tren slide S0
+    typedText: 'Happy Birthday, Em yêu!',
+
+    // Anh vong tron o man hinh ket thuc (S6)
+    endPhoto: 'https://pixnio.com/free-images/flora-plants/flowers/roses-flower-pictures/red-rose-flower-detailed-imge-1536x1152.jpg',
+
+    // Danh sach ky niem hien thi o slide S3
+    // Moi entry: { img: URL anh, heading: tieu de, body: noi dung }
+    memories: [
+      {
+        img: 'https://pixnio.com/free-images/flora-plants/flowers/roses-flower-pictures/red-rose-flower-detailed-imge-1536x1152.jpg',
+        heading: 'Ngày đầu gặp nhau',
+        body: 'Hôm đó trời se lạnh, anh vẫn còn nhớ em mặc chiếc áo trắng đứng cười. Chỉ một cái nhìn thôi, anh đã biết mình không thể quên được người này. ❤️',
+      },
+      {
+        img: 'https://thumbs.dreamstime.com/b/funny-imge-happy-monkey-taking-selfie-surrounded-bananas-image-created-ai-generative-328552834.jpg',
+        heading: 'Buổi hẹn hò đầu tiên',
+        body: 'Anh hồi hộp đến mức không biết nói gì, vậy mà em lại cứ cười khiến mọi thứ trở nên dễ dàng hơn. Từ hôm đó anh biết mình không muốn buông tay nữa. 💗',
+      },
+      {
+        img: 'https://www.discoverbenelux.com/wp-content/uploads/2023/10/COVER_Imge_Ozbilge.jpg',
+        heading: 'Chuyến đi đầu tiên',
+        body: 'Lần đầu tiên đi cùng nhau, hai đứa lạc đường mà vẫn cứ cười. Anh nhận ra rằng miễn là có em bên cạnh, bất cứ nơi nào cũng trở thành nhà. 🌅',
+      },
+      {
+        img: 'https://pixnio.com/free-images/flora-plants/flowers/roses-flower-pictures/red-rose-flower-detailed-imge-1536x1152.jpg',
+        heading: 'Những khoảnh khắc bình yên',
+        body: 'Không cần đi đâu xa, chỉ cần ngồi bên nhau xem phim, uống trà chiều là anh đã thấy đời thật trọn vẹn. Em là sự bình yên anh tìm kiếm. 🌸',
+      },
+      {
+        img: 'https://pixnio.com/free-images/flora-plants/flowers/roses-flower-pictures/red-rose-flower-detailed-imge-1536x1152.jpg',
+        heading: 'Và còn nhiều hơn nữa...',
+        body: 'Còn rất nhiều kỷ niệm chưa kịp ghi lại, nhưng tất cả đều nằm trong tim anh. Anh muốn cùng em tạo thêm thật nhiều kỷ niệm đẹp — mãi mãi về sau. 💕',
+      },
+    ],
+
+    // Cac cau hien ra khi bam nut "Khong" (theo vong)
+    noButtonTexts: [
+      'Đừng mà~ 🥺',
+      'Nghĩ lại đi em 😢',
+      'Anh buồn lắm 💔',
+      'Bấm nút kia đi mà~ 💕',
+      'Em chắc chưa? 🥹',
+      'Thật sự luôn á? 😭',
+    ],
+
+    // Cai dat animation — chinh neu muon nhanh/cham hon
+    anim: {
+      loadingDelayMs:   2400,   // ms truoc khi loading fade out
+      typingSpeedMs:    55,     // ms moi ky tu khi go may chu
+      defaultHoldMs:    2200,   // ms giu text truoc khi fade out
+      heartIntervalMs:  250,    // ms giua moi lan spawn tim
+      maxHearts:        80,     // so tim toi da cung luc
+      starCount:        220,    // so ngoi sao tren bau troi
+      petalIntervalMs:  500,    // ms giua moi canh hoa roi
+      petalEmoji:       ['🌸', '🌺', '💮', '🌷'],
+      heartColors:      ['#e91e63','#f48fb1','#ff6b9d','#ff4081','#f06292','#ff80ab','#ff1744'],
+      confettiColors:   ['#e91e63','#ffd700','#f48fb1','#ff6b9d','#4fc3f7','#81c784','#ffab40','#ba68c8'],
+    },
+  };
+
+  /* ============================================================
+     DOM REFERENCES — Tat ca querySelector tap trung mot cho
+     ============================================================ */
+  const DOM = {
+    loadingSlide:  document.getElementById('slide-loading'),
+    starsCanvas:   document.getElementById('stars-canvas'),
+    heartsCanvas:  document.getElementById('hearts-canvas'),
+    fwCanvas:      document.getElementById('fw-canvas'),
+    confCanvas:    document.getElementById('conf-canvas'),
+    typedEl:       document.getElementById('typed'),
+    memFrame:      document.getElementById('mem-frame'),
+    memCounter:    document.getElementById('mem-count'),
+    memTextCol:    document.getElementById('mem-text-col'),
+    btnYes:        document.getElementById('btn-yes'),
+    btnNo:         document.getElementById('btn-no'),
+    endPhoto:      document.getElementById('end-photo'),
+    // Live queries — called after buildMemorySlide() inserts elements
+    getMemImgs:    () => document.querySelectorAll('#s3 .mem-img'),
+    getMemEntries: () => document.querySelectorAll('#s3 .mem-entry'),
+  };
+
+  /* ============================================================
+     UTILITIES
+     ============================================================ */
+
+  /** Promise-based setTimeout */
+  const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+  /** Fade in, hold, fade out. Resolves after fade-out completes. */
+  function fadeInOut(el, holdMs = CONFIG.anim.defaultHoldMs) {
+    return new Promise(resolve => {
+      gsap.set(el, { opacity: 0 });
+      gsap.to(el, {
+        opacity: 1, duration: .8, ease: 'power2.out',
+        onComplete() {
+          setTimeout(() => {
+            gsap.to(el, { opacity: 0, duration: .7, ease: 'power2.in', onComplete: resolve });
+          }, holdMs);
+        },
+      });
+    });
+  }
+
+  /** Fade in and stay visible. */
+  function fadeIn(el) {
+    return new Promise(resolve => {
+      gsap.set(el, { opacity: 0 });
+      gsap.to(el, { opacity: 1, duration: .8, ease: 'power2.out', onComplete: resolve });
+    });
+  }
+
+  /**
+   * Animate each [data-g] child of a slide sequentially.
+   * @param {Element} slideEl
+   * @param {{ holdMs?: number, lastStay?: boolean }} options
+   */
+  async function playSlideTexts(slideEl, { holdMs = CONFIG.anim.defaultHoldMs, lastStay = false } = {}) {
+    const children = [...slideEl.querySelectorAll('[data-g]')];
+    for (let i = 0; i < children.length; i++) {
+      const isLast = i === children.length - 1;
+      await (isLast && lastStay ? fadeIn(children[i]) : fadeInOut(children[i], holdMs));
+    }
+  }
+
+  /* ============================================================
+     SLIDE ENGINE — GSAP 3D page-flip transitions
+     ============================================================ */
+  const SLIDE_IDS = ['s0', 's1', 's2', 's3', 's4', 's5', 's6'];
+  let currentSlideIndex = -1;
+
+  /** Transition to slide by index. Returns Promise that resolves when slide is fully visible. */
+  function showSlide(idx) {
+    return new Promise(resolve => {
+      if (idx === currentSlideIndex || idx < 0 || idx >= SLIDE_IDS.length) { resolve(); return; }
+
+      const prevIdx = currentSlideIndex;
+      currentSlideIndex = idx;
+
+      const nextEl   = document.getElementById(SLIDE_IDS[currentSlideIndex]);
+      gsap.set(nextEl.querySelectorAll('[data-g]'), { opacity: 0 });
+      nextEl.classList.add('active');
+
+      if (prevIdx >= 0) {
+        const prevEl    = document.getElementById(SLIDE_IDS[prevIdx]);
+        const prevInner = prevEl.querySelector('.slide-inner, .mem-wrap');
+
+        // Reset tilt state before flipping out
+        if (prevInner) gsap.set(prevInner, { clearProps: 'all' });
+        prevEl.querySelectorAll('[data-g]').forEach(el => gsap.set(el, { clearProps: 'x,y' }));
+
+        // Old slide flips to the left
+        gsap.to(prevEl, {
+          rotationY: -90, transformPerspective: 1400, duration: .42, ease: 'power2.in',
+          onComplete() { prevEl.classList.remove('active'); gsap.set(prevEl, { clearProps: 'all' }); },
+        });
+
+        // New slide flips in from the right
+        gsap.set(nextEl, { opacity: 1, rotationY: 90, transformPerspective: 1400 });
+        gsap.to(nextEl, { rotationY: 0, duration: .5, ease: 'power2.out', delay: .38, onComplete: resolve });
+
+      } else {
+        // Very first slide: simple fade in
+        gsap.set(nextEl, { opacity: 0 });
+        gsap.to(nextEl, { opacity: 1, duration: 1, ease: 'power2.out', onComplete: resolve });
+      }
+    });
+  }
+
+  /* ============================================================
+     MOUSE TILT 3D — Rotate slide content based on cursor position
+     ============================================================ */
+  const TILT_MAX = { x: 10, y: 8 }; // max degrees
+
+  function getSlideInner(slide) {
+    return slide.querySelector('.slide-inner') || slide.querySelector('.mem-wrap');
+  }
+
+  document.addEventListener('mousemove', e => {
+    const activeSlide = document.querySelector('.slide.active');
+    if (!activeSlide || activeSlide.id === 'slide-loading') return;
+
+    const inner = getSlideInner(activeSlide);
+    if (!inner) return;
+
+    const nx = (e.clientX / innerWidth  - .5) * 2; // -1 to +1
+    const ny = (e.clientY / innerHeight - .5) * 2;
+
+    gsap.to(inner, {
+      rotationY: nx * TILT_MAX.x, rotationX: -ny * TILT_MAX.y,
+      transformPerspective: 900, duration: .7, ease: 'power2.out',
+    });
+
+    // Parallax: each [data-g] layer shifts slightly opposite to tilt
+    [...activeSlide.querySelectorAll('[data-g]')].forEach((el, i) => {
+      const depth = (i + 1) * 4;
+      gsap.to(el, { x: -nx * depth, y: -ny * depth * .55, duration: .9, ease: 'power2.out' });
+    });
+  });
+
+  document.addEventListener('mouseleave', () => {
+    const activeSlide = document.querySelector('.slide.active');
+    if (!activeSlide) return;
+
+    const inner = getSlideInner(activeSlide);
+    if (inner) gsap.to(inner, { rotationY: 0, rotationX: 0, duration: 1.2, ease: 'power3.out' });
+    activeSlide.querySelectorAll('[data-g]').forEach(el =>
+      gsap.to(el, { x: 0, y: 0, duration: 1.2, ease: 'power3.out' })
+    );
+  });
+
+  /* ============================================================
+     S3: MEMORY SLIDESHOW — Build DOM from CONFIG, then animate
+     ============================================================ */
+
+  /** Inject S3 photo <img> elements and text entries from CONFIG.memories */
+  function buildMemorySlide() {
+    const frame   = DOM.memFrame;
+    const textCol = DOM.memTextCol;
+    const counter = DOM.memCounter;
+
+    CONFIG.memories.forEach((mem, i) => {
+      // Photo (inserted before the counter badge)
+      const img = document.createElement('img');
+      img.className = 'mem-img';
+      img.src       = mem.img;
+      img.alt       = `Memory ${i + 1}`;
+      frame.insertBefore(img, counter);
+
+      // Text entry
+      const num   = String(i + 1).padStart(2, '0');
+      const entry = document.createElement('div');
+      entry.className = 'mem-entry';
+      entry.innerHTML = `
+        <p class="mem-num">&#9825; ${num}</p>
+        <h3 class="mem-heading">${mem.heading}</h3>
+        <p class="mem-body">${mem.body}</p>
+      `;
+      textCol.appendChild(entry);
+    });
+
+    if (counter) counter.textContent = `1 / ${CONFIG.memories.length}`;
+  }
+
+  /** Animate the S3 memory slideshow (photo Ken-Burns cross-fade + text slide in/out) */
+  async function runMemorySlide() {
+    const imgs    = [...DOM.getMemImgs()];
+    const entries = [...DOM.getMemEntries()];
+    const counter = DOM.memCounter;
+    const total   = imgs.length;
+
+    gsap.set(imgs,    { opacity: 0, scale: 1.08 });
+    gsap.set(entries, { opacity: 0, y: 22 });
+
+    await showSlide(3);
+
+    for (let i = 0; i < total; i++) {
+      // Cross-fade photos
+      if (i > 0) {
+        gsap.to(imgs[i - 1], { opacity: 0, duration: 1, ease: 'power2.inOut' });
+        gsap.set(imgs[i], { scale: 1.08 });
+      }
+      gsap.to(imgs[i], { opacity: 1, scale: 1, duration: 1.5, ease: 'power2.out' });
+      gsap.to(imgs[i], { scale: 1.07, duration: 6, ease: 'none', delay: 1 }); // Ken Burns zoom
+
+      if (counter) counter.textContent = `${i + 1} / ${total}`;
+      await wait(i === 0 ? 700 : 500);
+
+      await new Promise(r => gsap.to(entries[i], { opacity: 1, y: 0,   duration: .9,  ease: 'power2.out', onComplete: r }));
+      await wait(3800);
+      await new Promise(r => gsap.to(entries[i], { opacity: 0, y: -18, duration: .65, ease: 'power2.in',  onComplete: r }));
+
+      if (i < total - 1) await wait(350);
+    }
+
+    // Fade out last photo before slide transition
+    gsap.to(imgs[total - 1], { opacity: 0, duration: .8 });
+    await wait(600);
+  }
+
+  /* ============================================================
+     TYPING ANIMATION
+     ============================================================ */
+
+  /** Type text character by character into an element */
+  function typeWriter(el, text, speedMs = CONFIG.anim.typingSpeedMs) {
+    return new Promise(resolve => {
+      let i = 0;
+      el.textContent = '';
+      const iv = setInterval(() => {
+        if (i < text.length) { el.textContent += text[i++]; }
+        else { clearInterval(iv); resolve(); }
+      }, speedMs);
+    });
+  }
+
+  /* ============================================================
+     HEART PARTICLES — 3D depth (hearts fly toward the viewer)
+     ============================================================ */
+  const heartsCtx = DOM.heartsCanvas.getContext('2d');
+  let hearts = [];
+
+  function resizeHeartsCanvas() {
+    DOM.heartsCanvas.width  = innerWidth;
+    DOM.heartsCanvas.height = innerHeight;
+  }
+  resizeHeartsCanvas();
+  window.addEventListener('resize', resizeHeartsCanvas);
+
+  function drawHeart(ctx, x, y, size, color, alpha) {
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle   = color;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.bezierCurveTo(x,        y - size / 2, x - size, y - size / 2, x - size, y);
+    ctx.bezierCurveTo(x - size, y + size / 2, x,        y + size * .8, x,       y + size);
+    ctx.bezierCurveTo(x,        y + size * .8, x + size, y + size / 2, x + size, y);
+    ctx.bezierCurveTo(x + size, y - size / 2, x,        y - size / 2, x,        y);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function spawnHeart() {
+    if (hearts.length >= CONFIG.anim.maxHearts) return;
+    const colors = CONFIG.anim.heartColors;
+    hearts.push({
+      x3: (Math.random() - .5) * innerWidth  * 2.6,
+      y3: (Math.random() - .5) * innerHeight * 2.6,
+      z:   700  + Math.random() * 700,
+      s:   5    + Math.random() * 13,
+      sp:  1.8  + Math.random() * 3.2,  // z-speed (depth)
+      w:   Math.random() * Math.PI * 2, // wobble angle
+      ws:  .008 + Math.random() * .022, // wobble speed
+      a:   .55  + Math.random() * .4,   // base alpha
+      c:   colors[Math.floor(Math.random() * colors.length)],
+    });
+  }
+
+  function animateHearts() {
+    heartsCtx.clearRect(0, 0, DOM.heartsCanvas.width, DOM.heartsCanvas.height);
+    const fov = 480, ox = innerWidth / 2, oy = innerHeight / 2;
+
+    hearts.sort((a, b) => b.z - a.z); // paint far hearts first
+
+    for (let i = hearts.length - 1; i >= 0; i--) {
+      const h = hearts[i];
+      h.z  -= h.sp;
+      h.w  += h.ws;
+      h.x3 += Math.sin(h.w) * 1.4;
+
+      if (h.z <= 5) { hearts.splice(i, 1); continue; }
+
+      const scale = fov / (fov + h.z);
+      const sx    = ox + h.x3 * scale;
+      const sy    = oy + h.y3 * scale;
+      const alpha = h.a * Math.min(1, (1400 - h.z) / 380) * Math.min(1, (h.z - 5) / 55);
+
+      if (alpha < .01 || sx < -80 || sx > innerWidth + 80 || sy < -80 || sy > innerHeight + 80) continue;
+      drawHeart(heartsCtx, sx, sy, h.s * scale, h.c, alpha);
+    }
+
+    requestAnimationFrame(animateHearts);
+  }
+
+  animateHearts();
+  setInterval(spawnHeart, CONFIG.anim.heartIntervalMs);
+
+  /* ============================================================
+     PETAL RAIN
+     ============================================================ */
+  let petalsActive = false;
+
+  function startPetals() {
+    if (petalsActive) return;
+    petalsActive = true;
+
+    const iv = setInterval(() => {
+      if (!petalsActive) { clearInterval(iv); return; }
+
+      const petal = document.createElement('div');
+      petal.className             = 'petal';
+      petal.textContent           = CONFIG.anim.petalEmoji[Math.floor(Math.random() * CONFIG.anim.petalEmoji.length)];
+      petal.style.left            = Math.random() * 100 + '%';
+      petal.style.fontSize        = (14 + Math.random() * 16) + 'px';
+      petal.style.animationDuration = (4 + Math.random() * 4) + 's';
+      document.body.appendChild(petal);
+      setTimeout(() => petal.remove(), 8500);
+    }, CONFIG.anim.petalIntervalMs);
+  }
+
+  function stopPetals() { petalsActive = false; }
+
+  /* ============================================================
+     STARRY SKY
+     ============================================================ */
+  const starsCtx = DOM.starsCanvas.getContext('2d');
+  let stars = [];
+
+  function initStars() {
+    DOM.starsCanvas.width  = innerWidth;
+    DOM.starsCanvas.height = innerHeight;
+    stars = Array.from({ length: CONFIG.anim.starCount }, () => ({
+      x:  Math.random() * innerWidth,
+      y:  Math.random() * innerHeight,
+      r:  .4 + Math.random() * 2,
+      tw: Math.random() * Math.PI * 2, // twinkle phase
+      sp: .02 + Math.random() * .03,   // twinkle speed
+    }));
+  }
+
+  function drawStars() {
+    starsCtx.clearRect(0, 0, DOM.starsCanvas.width, DOM.starsCanvas.height);
+    stars.forEach(s => {
+      s.tw += s.sp;
+      starsCtx.globalAlpha = .25 + Math.abs(Math.sin(s.tw)) * .75;
+      starsCtx.fillStyle   = '#fff';
+      starsCtx.beginPath();
+      starsCtx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      starsCtx.fill();
+    });
+    requestAnimationFrame(drawStars);
+  }
+
+  /* ============================================================
+     FIREWORKS
+     ============================================================ */
+  const fwCtx     = DOM.fwCanvas.getContext('2d');
+  let fwParticles = [];
+  let fwActive    = false;
+
+  function resizeFwCanvas() {
+    DOM.fwCanvas.width  = innerWidth;
+    DOM.fwCanvas.height = innerHeight;
+  }
+  resizeFwCanvas();
+  window.addEventListener('resize', resizeFwCanvas);
+
+  function launchFirework(cx, cy) {
+    const count = 80 + Math.floor(Math.random() * 50);
+    const hue   = Math.random() * 360;
+    for (let i = 0; i < count; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 2 + Math.random() * 6;
+      fwParticles.push({
+        x: cx,  y: cy,
+        dx: Math.cos(angle) * speed,
+        dy: Math.sin(angle) * speed,
+        life: 1,
+        dec: .008 + Math.random() * .012,
+        col: `hsl(${hue + Math.random() * 60}, 90%, ${50 + Math.random() * 30}%)`,
+        r:   1.5 + Math.random() * 2.5,
+        trail: [],
+      });
+    }
+  }
+
+  function animateFireworks() {
+    if (!fwActive) return;
+    fwCtx.clearRect(0, 0, DOM.fwCanvas.width, DOM.fwCanvas.height);
+
+    for (let i = fwParticles.length - 1; i >= 0; i--) {
+      const p = fwParticles[i];
+
+      p.trail.push({ x: p.x, y: p.y, l: p.life });
+      if (p.trail.length > 6) p.trail.shift();
+
+      p.x += p.dx;  p.y += p.dy;
+      p.dy += .08;  // gravity
+      p.dx *= .985; p.dy *= .985; // air resistance
+      p.life -= p.dec;
+
+      if (p.life <= 0) { fwParticles.splice(i, 1); continue; }
+
+      // Trail
+      p.trail.forEach((t, ti) => {
+        fwCtx.globalAlpha = t.l * ((ti + 1) / p.trail.length) * .35;
+        fwCtx.fillStyle   = p.col;
+        fwCtx.beginPath();
+        fwCtx.arc(t.x, t.y, p.r * .4, 0, Math.PI * 2);
+        fwCtx.fill();
+      });
+
+      // Head
+      fwCtx.globalAlpha = p.life;
+      fwCtx.fillStyle   = p.col;
+      fwCtx.beginPath();
+      fwCtx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      fwCtx.fill();
+    }
+
+    fwCtx.globalAlpha = 1;
+    requestAnimationFrame(animateFireworks);
+  }
+
+  function startFireworks() {
+    fwActive = true; fwParticles = [];
+    animateFireworks();
+
+    // Wave 1: 8 rockets, 400 ms apart
+    for (let i = 0; i < 8; i++) {
+      setTimeout(() => launchFirework(
+        innerWidth  * .2  + Math.random() * innerWidth  * .6,
+        innerHeight * .1  + Math.random() * innerHeight * .4,
+      ), i * 400);
+    }
+
+    // Wave 2: 6 rockets after 3.5 s
+    setTimeout(() => {
+      for (let i = 0; i < 6; i++) {
+        setTimeout(() => launchFirework(
+          innerWidth  * .15 + Math.random() * innerWidth  * .7,
+          innerHeight * .1  + Math.random() * innerHeight * .5,
+        ), i * 350);
+      }
+    }, 3500);
+  }
+
+  /* ============================================================
+     CONFETTI
+     ============================================================ */
+  const confCtx     = DOM.confCanvas.getContext('2d');
+  let confParticles = [];
+  let confActive    = false;
+
+  function resizeConfCanvas() {
+    DOM.confCanvas.width  = innerWidth;
+    DOM.confCanvas.height = innerHeight;
+  }
+  resizeConfCanvas();
+  window.addEventListener('resize', resizeConfCanvas);
+
+  function launchConfetti() {
+    confActive = true; confParticles = [];
+    const colors = CONFIG.anim.confettiColors;
+
+    for (let i = 0; i < 150; i++) {
+      confParticles.push({
+        x:    innerWidth  / 2 + (Math.random() - .5) * 200,
+        y:    innerHeight / 2 - 100,
+        dx:   (Math.random() - .5) * 12,
+        dy:   -3 - Math.random() * 8,
+        r:    3 + Math.random() * 6,
+        col:  colors[Math.floor(Math.random() * colors.length)],
+        rot:  Math.random() * 360,
+        rs:   3 + Math.random() * 8,     // rotation speed deg/frame
+        g:    .12 + Math.random() * .08, // gravity
+        life: 1,
+      });
+    }
+    animateConfetti();
+  }
+
+  function animateConfetti() {
+    if (!confActive) return;
+    confCtx.clearRect(0, 0, DOM.confCanvas.width, DOM.confCanvas.height);
+
+    let alive = false;
+    confParticles.forEach(c => {
+      c.x += c.dx; c.y += c.dy; c.dy += c.g; c.dx *= .99;
+      c.rot  += c.rs;
+      c.life -= .003;
+      if (c.life <= 0 || c.y > innerHeight + 20) return;
+      alive = true;
+      confCtx.save();
+      confCtx.translate(c.x, c.y);
+      confCtx.rotate(c.rot * Math.PI / 180);
+      confCtx.globalAlpha = c.life;
+      confCtx.fillStyle   = c.col;
+      confCtx.fillRect(-c.r / 2, -c.r / 2, c.r, c.r * 1.6);
+      confCtx.restore();
+    });
+
+    if (alive) { requestAnimationFrame(animateConfetti); }
+    else       { confActive = false; confCtx.clearRect(0, 0, DOM.confCanvas.width, DOM.confCanvas.height); }
+  }
+
+  /* ============================================================
+     "NO" BUTTON — Runs away on every interaction
+     ============================================================ */
+  let noClickCount = 0;
+
+  function moveNoButton() {
+    const btn = DOM.btnNo;
+    btn.style.position = 'fixed';
+    btn.style.zIndex   = '200';
+    btn.style.left     = Math.random() * (innerWidth  - btn.offsetWidth  - 20) + 'px';
+    btn.style.top      = Math.random() * (innerHeight - btn.offsetHeight - 20) + 'px';
+    btn.textContent    = CONFIG.noButtonTexts[noClickCount % CONFIG.noButtonTexts.length];
+    noClickCount++;
+  }
+
+  DOM.btnNo.addEventListener('mouseenter', moveNoButton);
+  DOM.btnNo.addEventListener('click',      moveNoButton);
+  DOM.btnNo.addEventListener('touchstart', e => { e.preventDefault(); moveNoButton(); });
+
+  /* ============================================================
+     "YES" BUTTON — Trigger ending sequence
+     ============================================================ */
+  DOM.btnYes.addEventListener('click', async () => {
+    startFireworks();
+    launchConfetti();
+    for (let i = 0; i < 25; i++) spawnHeart();
+
+    await wait(900);
+    DOM.btnNo.style.display = 'none';
+
+    await showSlide(6);
+    await playSlideTexts(document.getElementById('s6'), { holdMs: 2500, lastStay: true });
+
+    setTimeout(launchConfetti, 2500);
+    setTimeout(launchConfetti, 5000);
+  });
+
+  /* ============================================================
+     MAIN SHOW — Auto-advancing presentation timeline
+     ============================================================ */
+  async function runShow() {
+
+    // Step 1: Inject dynamic content from CONFIG
+    buildMemorySlide();
+    DOM.endPhoto.src = CONFIG.endPhoto;
+
+    // Step 2: Dismiss loading screen
+    await wait(CONFIG.anim.loadingDelayMs);
+    gsap.to(DOM.loadingSlide, {
+      opacity: 0, duration: .8, ease: 'power2.in',
+      onComplete() { DOM.loadingSlide.style.display = 'none'; },
+    });
+    await wait(600);
+
+    // Step 3: Start starfield (dim at first)
+    initStars();
+    drawStars();
+    gsap.to(DOM.starsCanvas, { opacity: .5, duration: 3 });
+
+    // ── S0: Intro ────────────────────────────────────────────
+    await showSlide(0);
+    const [s0Subtitle, s0Typed, s0Closing] = document.getElementById('s0').querySelectorAll('[data-g]');
+
+    await fadeIn(s0Subtitle);
+    await wait(2000);
+    gsap.to(s0Subtitle, { opacity: 0, duration: .7 });
+    await wait(800);
+
+    await fadeIn(s0Typed);
+    await typeWriter(DOM.typedEl, CONFIG.typedText);
+    await wait(2500);
+    gsap.to(s0Typed, { opacity: 0, duration: .7 });
+    await wait(500);
+
+    await fadeInOut(s0Closing, 2500);
+
+    // ── S1: Birthday cake ─────────────────────────────────────
+    await showSlide(1);
+    startPetals();
+    await playSlideTexts(document.getElementById('s1'), { holdMs: 2500 });
+
+    // ── S2: Wishes ────────────────────────────────────────────
+    await showSlide(2);
+    await playSlideTexts(document.getElementById('s2'), { holdMs: 3000 });
+
+    // ── S3: Photo memories ────────────────────────────────────
+    await runMemorySlide();
+
+    // ── S4: The twist ─────────────────────────────────────────
+    stopPetals();
+    await showSlide(4);
+    await playSlideTexts(document.getElementById('s4'), { holdMs: 2500 });
+    await wait(500);
+
+    // Brighten stars for proposal atmosphere
+    gsap.to(DOM.starsCanvas, { opacity: 1, duration: 2 });
+
+    // ── S5: Proposal (waits for user interaction) ─────────────
+    await showSlide(5);
+    const [s5Lead, s5Proposal] = document.getElementById('s5').querySelectorAll('[data-g]');
+    gsap.set([s5Lead, s5Proposal], { opacity: 0 });
+    await fadeInOut(s5Lead, 2500);
+    await fadeIn(s5Proposal);
+    // User clicks "Yes" → handler above takes over
+  }
+
+  /* ============================================================
+     BOOTSTRAP
+     ============================================================ */
+  window.addEventListener('load', runShow);
+
+  </script>
+</body>
+</html>
