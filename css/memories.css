@@ -1,0 +1,261 @@
+.memories-content {
+  width: 100%;
+  max-width: min(94vw, 960px);
+}
+
+.memories-stage {
+  position: relative;
+  width: 100%;
+  min-height: min(58vh, 420px);
+}
+
+/* Trước mỗi kỉ niệm: 1 dòng caption (ngày/giới thiệu ngắn) đứng riêng 1 mình,
+   chồng đúng lên vị trí của .memories-wrap bên dưới - chỉ 1 trong 2 lớp này
+   hiện ra tại một thời điểm (xem js/scenes/memories.js). */
+.memories-caption-col {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.memory-caption-entry {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0 var(--space-sm);
+  text-align: center;
+  font-size: clamp(1.3rem, 3.6vw, 2rem);
+  line-height: 1.5;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 900ms ease, transform 900ms ease;
+}
+
+.memory-caption-entry.is-shown {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Media + text của kỉ niệm đang phát - chỉ hiện sau khi caption đã mờ đi. */
+.memories-wrap {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: stretch;
+  gap: var(--space-md);
+  width: 100%;
+  opacity: 0;
+  transition: opacity 900ms ease;
+}
+
+.memories-wrap.is-active {
+  opacity: 1;
+}
+
+.memories-media-col {
+  flex: 1 1 50%;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.memories-media-frame {
+  position: relative;
+  /* Video quay dọc bằng iPhone có tỉ lệ thật 9:16, không phải 3:4 như cũ - để
+     3:4 thì object-fit:cover phải crop mất 1 phần đáng kể phía trên/dưới khung
+     hình (nhìn như bị "bóp"). Đổi đúng sang 9:16 rồi giữ nguyên "ngân sách"
+     chiều cao cũ (~56vh / ~507px, suy ngược ra chiều rộng 285px/31.5vh tương
+     ứng) để không phải sửa lại layout xung quanh. Vẫn chặn cả theo chiều rộng
+     lẫn chiều cao khả dụng - lý do y hệt bản cũ: màn ngang thấp (điện thoại
+     xoay ngang) mà chỉ chặn theo chiều rộng thì khung sẽ bị ép cao hơn cả
+     viewport và tràn ra ngoài. */
+  width: min(100%, 285px, 31.5vh);
+  aspect-ratio: 9 / 16;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: var(--shadow-soft);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+/* Ô chứa video (hoặc placeholder) đang phát của kỉ niệm hiện tại - nội dung
+   được JS thay trực tiếp mỗi khi chuyển sang video kế tiếp (1 kỉ niệm có thể
+   có nhiều video, phát lần lượt), không còn dựng sẵn nhiều lớp lưới chồng lên
+   nhau như trước (mọi kỉ niệm giờ toàn là video, không còn ảnh tĩnh). */
+.memories-media-slot {
+  position: absolute;
+  inset: 0;
+}
+
+.memory-media,
+.memory-placeholder {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.memory-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  background: linear-gradient(135deg, var(--color-heart-soft), var(--color-gold) 60%, var(--color-blush));
+}
+
+.memory-placeholder__icon {
+  font-size: 2rem;
+}
+
+.memory-placeholder__label {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: #4a1830;
+  padding: 0 var(--space-xs);
+  text-align: center;
+}
+
+/* Badge đếm thứ tự kỉ niệm (vd: "2 / 5") — luôn nằm trên cùng khung media. */
+.memories-count {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  z-index: 2;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 0.85rem;
+  color: var(--color-text);
+  background: rgba(18, 8, 33, 0.5);
+  padding: 3px 12px;
+  border-radius: 999px;
+  backdrop-filter: blur(6px);
+}
+
+/* Cột phải: từng kỉ niệm là 1 khối text tuyệt đối chồng lên nhau, hiện/ẩn
+   song song với media bên cột trái. */
+.memories-text-col {
+  flex: 1 1 50%;
+  min-width: 0;
+  position: relative;
+  text-align: left;
+}
+
+.memory-text-entry {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 900ms ease, transform 900ms ease;
+}
+
+.memory-text-entry.is-active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.memory-num {
+  font-size: clamp(0.95rem, 2vw, 1.15rem);
+  margin-bottom: var(--space-xs);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.memory-num::after {
+  content: "";
+  display: block;
+  flex: 0 0 32px;
+  height: 1px;
+  background: rgba(var(--color-gold-rgb), 0.4);
+}
+
+/* Heading/body dùng font sans-serif (--font-body) thay vì kiểu chữ nghiêng
+   chung của trang (--font-display + glow) - dễ đọc hơn hẳn cho đoạn text dài,
+   chỉ giữ 1 bóng đổ nhẹ để nổi trên nền động phía sau chứ không làm mờ chữ. */
+.memory-heading {
+  font-family: var(--font-body);
+  font-style: normal;
+  font-weight: 600;
+  color: var(--color-text);
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
+  font-size: clamp(1.25rem, 3.2vw, 1.75rem);
+  margin-bottom: var(--space-xs);
+  line-height: 1.3;
+}
+
+.memory-body {
+  font-family: var(--font-body);
+  font-style: normal;
+  color: var(--color-text);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+  text-align: left;
+  font-size: clamp(0.9rem, 2.2vw, 1.05rem);
+  line-height: 1.85;
+}
+
+@media (max-width: 640px) {
+  /* .memories-wrap/.memories-caption-col đều là position:absolute (để crossfade
+     caption <-> media+text), nên KHÔNG tự đóng góp chiều cao cho .memories-stage
+     được - phải tính tay: chiều cao khung media + khoảng cách + chiều cao tối
+     thiểu cột text bên dưới, cộng thêm chút đệm an toàn. min-height:0 ở đây sẽ
+     làm cả khối co về 0 và heading/body gần như biến mất - đã từng bị bug này.
+     Khung media giờ chặn theo chiều cao (46vh, xem .memories-media-frame ngay
+     dưới đây) chứ không còn theo chiều rộng như bản 4:3 cũ - video quay dọc
+     9:16 mà để full-width thì cao gần gấp đôi chiều rộng, sẽ tràn hẳn ra ngoài
+     màn hình nếu vẫn giữ full-width như trước. */
+  .memories-stage {
+    min-height: calc(46vh + 34vh + var(--space-md) + 1rem);
+  }
+
+  .memories-wrap {
+    flex-direction: column;
+  }
+
+  .memories-media-frame {
+    max-width: none;
+    width: min(100%, 230px, 26vh);
+    aspect-ratio: 9 / 16;
+  }
+
+  .memories-text-col {
+    min-height: 34vh;
+  }
+
+  .memory-heading {
+    font-size: clamp(1.1rem, 4.5vw, 1.4rem);
+  }
+
+  .memory-body {
+    font-size: clamp(0.85rem, 3.4vw, 0.98rem);
+  }
+}
+
+/* Điện thoại xoay ngang (vd iPhone 15 Pro landscape ~ 852x393) vẫn rộng hơn
+   640px nên không rơi vào breakpoint trên - vẫn giữ layout 2 cột (đủ chỗ
+   ngang), chỉ thu nhỏ thêm chữ để chắc chắn vừa trong chiều cao rất hẹp. */
+@media (max-height: 500px) {
+  .memory-heading {
+    font-size: clamp(1.05rem, 3.2vh, 1.4rem);
+    margin-bottom: 4px;
+  }
+
+  .memory-body {
+    font-size: clamp(0.8rem, 2.4vh, 0.95rem);
+    line-height: 1.5;
+  }
+
+  .memory-num {
+    font-size: clamp(0.8rem, 2vh, 1rem);
+    margin-bottom: 4px;
+  }
+}

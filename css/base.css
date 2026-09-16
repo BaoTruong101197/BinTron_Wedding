@@ -1,0 +1,373 @@
+:root {
+  --color-bg-night: #07041a;
+  --color-blush: #ffd1dc;
+  --color-gold: #f3c98b;
+  --color-heart: #ff6b8b;
+  --color-heart-soft: #ff9fb5;
+  --color-text: #fff6f8;
+
+  /* Bản RGB (không có #) của --color-heart/--color-gold, để dùng trong rgba(var(...), alpha)
+     ở những chỗ cần chỉnh độ mờ - cùng cách làm với --shadow-tint bên dưới. */
+  --color-heart-rgb: 255, 107, 139;
+  --color-gold-rgb: 243, 201, 139;
+
+  --font-display: "Playfair Display", "Times New Roman", serif;
+  --font-body: "Jost", "Segoe UI", sans-serif;
+
+  --space-xs: clamp(0.4rem, 1vw, 0.75rem);
+  --space-sm: clamp(0.75rem, 2vw, 1.25rem);
+  --space-md: clamp(1.25rem, 4vw, 2.5rem);
+  --space-lg: clamp(2rem, 6vw, 4rem);
+
+  --scene-transition: 900ms;
+
+  /* Bóng nhuộm màu đêm-tím của nền, dùng thay cho bóng đen phẳng ở mọi nơi trong trang. */
+  --shadow-tint: 44, 18, 80;
+  --shadow-soft: 0 20px 45px -10px rgba(var(--shadow-tint), 0.45);
+  --shadow-lift: 0 12px 28px -8px rgba(var(--shadow-tint), 0.4);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  background: var(--color-bg-night);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Nền Aurora: các quả cầu màu mờ (blur lớn) trôi chậm độc lập, chồng lên nhau tạo
+   quầng sáng huyền ảo — sống động hơn nhiều so với 1 gradient tĩnh. */
+#aurora {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+  will-change: transform;
+  opacity: 0.9;
+}
+
+.orb--gold {
+  width: 75vw;
+  height: 75vw;
+  top: -20%;
+  left: -20%;
+  background: radial-gradient(circle, rgba(219, 39, 119, 0.28) 0%, transparent 65%);
+  animation: orb-float-1 22s ease-in-out infinite alternate;
+}
+
+.orb--rose {
+  width: 65vw;
+  height: 65vw;
+  top: 10%;
+  right: -25%;
+  background: radial-gradient(circle, rgba(91, 33, 182, 0.35) 0%, transparent 65%);
+  animation: orb-float-2 28s ease-in-out infinite alternate;
+}
+
+.orb--magenta {
+  width: 55vw;
+  height: 55vw;
+  bottom: -15%;
+  left: 15%;
+  background: radial-gradient(circle, rgba(233, 30, 99, 0.22) 0%, transparent 65%);
+  animation: orb-float-3 19s ease-in-out infinite alternate;
+}
+
+.orb--violet {
+  width: 45vw;
+  height: 45vw;
+  top: 45%;
+  right: 0%;
+  background: radial-gradient(circle, rgba(124, 58, 237, 0.28) 0%, transparent 65%);
+  animation: orb-float-4 24s ease-in-out infinite alternate;
+}
+
+.orb--blush {
+  width: 35vw;
+  height: 35vw;
+  top: 60%;
+  left: 40%;
+  background: radial-gradient(circle, rgba(236, 72, 153, 0.18) 0%, transparent 65%);
+  animation: orb-float-5 17s ease-in-out infinite alternate;
+}
+
+@keyframes orb-float-1 { to { transform: translate(12vw, 10vh) scale(1.15); } }
+@keyframes orb-float-2 { to { transform: translate(-14vw, 8vh) scale(0.88); } }
+@keyframes orb-float-3 { to { transform: translate(8vw, -12vh) scale(1.12); } }
+@keyframes orb-float-4 { to { transform: translate(-10vw, -8vh) scale(1.2); } }
+@keyframes orb-float-5 { to { transform: translate(6vw, 10vh) scale(0.85); } }
+
+/* Hạt grain mờ kiểu phim, phủ toàn màn hình để nền có chất liệu, đỡ "phẳng nhựa". */
+.grain {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  pointer-events: none;
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  background-size: 160px 160px;
+}
+
+#viewport {
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+  overflow: hidden;
+}
+
+.stage {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.scene {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-lg) var(--space-md);
+  text-align: center;
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.98);
+  transition: opacity var(--scene-transition) ease, transform var(--scene-transition) ease;
+}
+
+.scene.is-active {
+  opacity: 1;
+  pointer-events: auto;
+  transform: scale(1);
+  z-index: 2;
+}
+
+.scene__inner {
+  position: relative;
+  z-index: 1;
+  max-width: 640px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+/* Giọng chữ dùng chung cho MỌI text hiện ra trên trang (eyebrow, tiêu đề, đoạn
+   văn, dòng "thư tay") - cùng 1 font nghiêng, 1 màu, 1 sắc glow nhẹ quanh chữ,
+   để toàn bộ trang đọc như 1 giọng kể chuyện thống nhất thay vì mỗi nơi 1 màu
+   (gold/muted/đỏ...) như trước. Nơi nào cần khác biệt thì chỉ nên lệch ở kích
+   thước/độ đậm, không lệch ở font-family/màu/glow. */
+.eyebrow,
+.love-line,
+h1,
+h2,
+p {
+  font-family: var(--font-display);
+  font-style: italic;
+  letter-spacing: 0.01em;
+  color: var(--color-text);
+  text-shadow: 0 0 24px rgba(var(--color-heart-rgb), 0.4), 0 0 50px rgba(var(--color-gold-rgb), 0.25);
+}
+
+.eyebrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  row-gap: 6px;
+  gap: 0.6em;
+  width: 100%;
+  max-width: 100%;
+  font-weight: 500;
+  font-size: clamp(0.95rem, 2.4vw, 1.15rem);
+}
+
+.eyebrow::before,
+.eyebrow::after {
+  content: "";
+  width: clamp(14px, 3vw, 26px);
+  height: 1px;
+  background: linear-gradient(90deg, transparent, currentColor);
+  opacity: 0.55;
+}
+
+.eyebrow::after {
+  background: linear-gradient(90deg, currentColor, transparent);
+}
+
+h1,
+h2 {
+  font-weight: 600;
+  line-height: 1.28;
+  margin: 0;
+}
+
+h1 {
+  font-size: clamp(1.75rem, 5.6vw, 3rem);
+}
+
+h2 {
+  font-size: clamp(1.35rem, 4.3vw, 2.1rem);
+}
+
+p {
+  margin: 0;
+  font-weight: 400;
+  font-size: clamp(0.95rem, 2.6vw, 1.1rem);
+  line-height: 1.75;
+}
+
+button {
+  font-family: var(--font-body);
+  font-style: normal;
+  cursor: pointer;
+  border: none;
+}
+
+/* .love-line-stack là container đi kèm .love-line: dùng CSS Grid xếp TẤT CẢ các
+   .love-line con vào chung 1 cell (grid-area: 1 / 1) - nhờ vậy dòng nào đang
+   hiện cũng nằm đúng 1 vị trí căn giữa duy nhất (không bị lệch theo thứ tự xếp
+   dọc như flex), còn chiều cao cell tự giãn theo dòng dài nhất (vd đoạn mô tả
+   nhiều chữ) nên không cần đoán trước min-height. */
+.love-line-stack {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+}
+
+.love-line {
+  grid-area: 1 / 1;
+  width: 100%;
+  margin: 0;
+  font-weight: 500;
+  font-size: clamp(1.3rem, 3.6vw, 2rem);
+  line-height: 1.5;
+  text-align: center;
+}
+
+/* Dùng cho các dòng chữ cần hiện tuần tự (xem utils.revealSequential):
+   ẩn + hơi trôi lên lúc đầu, class "is-shown" bật hiệu ứng hiện ra. */
+.seq-line {
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 900ms ease, transform 900ms ease;
+}
+
+.seq-line.is-shown {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (max-width: 420px) {
+  .scene {
+    padding: var(--space-md) var(--space-sm);
+  }
+}
+
+/* ===== Hearts warp intro (js/heartsWarp.js) - hiệu ứng mở màn dùng chung: hạt
+   trái tim bay theo hình tia từ tâm màn hình ra ngoài rồi tắt dần, hiện đang
+   chạy trước khi intro.js hiện tuần tự các dòng trong CONFIG.intro.texts.
+   Overlay phủ toàn màn hình nên scene phía dưới không cần thêm class/CSS riêng
+   gì cả. Dưới prefers-reduced-motion: reduce, hiệu ứng bị bỏ qua hoàn toàn ở
+   tầng JS (overlay này không được tạo ra) nên không cần override riêng ở đây.
+   z-index 45: trên .grain (40, ngay trên). ===== */
+
+.hearts-warp {
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  overflow: hidden;
+  background: var(--color-bg-night);
+  pointer-events: auto;
+  opacity: 1;
+  transition: opacity 400ms ease;
+}
+
+.hearts-warp.is-leaving {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.hearts-warp__canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* ===== Start gate - overlay "chạm để bắt đầu" hiện ngay khi trang load, TRƯỚC cả
+   hearts-warp. Lý do tồn tại: trình duyệt chặn tuyệt đối autoplay audio có tiếng
+   nếu chưa có tương tác người dùng, mà từ khi bỏ màn verification thì toàn bộ
+   flow (intro -> memories) đều tự động theo timer, không còn thao tác
+   nào để "mở khoá" nhạc nữa. 1 lần chạm ở đây (js/main.js) sẽ mở khoá audio VÀ bắt
+   đầu sceneManager cùng lúc. z-index cao nhất trang (60) vì phải che mọi thứ,
+   kể cả hearts-warp (45) - chỉ tồn tại vài giây đầu đời trang. ===== */
+
+.start-gate {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  background: rgba(7, 4, 26, 0.35);
+  backdrop-filter: blur(2px);
+  opacity: 1;
+  transition: opacity 500ms ease;
+}
+
+.start-gate.is-leaving {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.start-gate__text {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 500;
+  font-size: clamp(1.3rem, 3.6vw, 2rem);
+  color: var(--color-text);
+  text-shadow: 0 0 24px rgba(var(--color-heart-rgb), 0.4);
+  animation: start-gate-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes start-gate-pulse {
+  0%, 100% { transform: scale(1); opacity: 0.9; }
+  50% { transform: scale(1.04); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .start-gate__text {
+    animation: none;
+  }
+}

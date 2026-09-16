@@ -1,0 +1,297 @@
+.gift-content {
+  width: 100%;
+  max-width: min(94vw, 640px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* ===== Màn chọn quà ===== */
+
+.gift-pick-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-md);
+  width: 100%;
+  opacity: 1;
+  transition: opacity 900ms ease;
+}
+
+.gift-pick-stage.is-leaving {
+  opacity: 0;
+}
+
+.gift-pick-stage[hidden] {
+  display: none;
+}
+
+/* Caption riêng hiện sau khi chọn quà, trước khi nhường chỗ cho video bí mật -
+   giống hệt kiểu caption của memories (xem .memory-caption-entry). */
+.gift-caption-stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  opacity: 0;
+  transition: opacity 900ms ease;
+}
+
+.gift-caption-stage[hidden] {
+  display: none;
+}
+
+.gift-caption-stage.is-shown {
+  opacity: 1;
+}
+
+.gift-caption {
+  margin: 0;
+  padding: 0 var(--space-sm);
+  text-align: center;
+  font-size: clamp(1.3rem, 3.6vw, 2rem);
+  line-height: 1.5;
+}
+
+.gift-heading {
+  font-size: clamp(1.4rem, 4vw, 2rem);
+  text-align: center;
+}
+
+.gift-subheading {
+  text-align: center;
+  max-width: 42ch;
+}
+
+/* Grid 3 cột cố định thay vì flex 1 hàng - flex trước đây không tự xuống
+   hàng, nên hễ CONFIG.gift.boxCount > 3-4 là các ô quà bị tràn ra ngoài màn
+   hình trên điện thoại. Grid đảm bảo luôn đúng 3 ô/hàng bất kể boxCount bao
+   nhiêu, dư ra thì tự xuống hàng tiếp theo. */
+.gift-boxes {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  justify-items: center;
+  align-items: end;
+  gap: clamp(1.25rem, 5vw, 2rem) clamp(0.75rem, 3vw, 1.5rem);
+  padding-top: var(--space-sm);
+  width: 100%;
+}
+
+/* Mỗi ô quà lệch xoay/độ cao/kích thước riêng (không phải 1 hàng giống hệt
+   nhau) cho cảm giác như quà đặt tự nhiên trên bàn. --tilt/--lift là góc/độ
+   lệch cố định của từng ô, --scale chỉ đổi khi hover/active/chọn - nhờ vậy
+   transform luôn cộng dồn đúng thay vì bị ghi đè mất góc xoay gốc. */
+.gift-box {
+  position: relative;
+  width: 108px;
+  height: 108px;
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  --tilt: 0deg;
+  --lift: 0px;
+  --scale: 1;
+  transform: rotate(var(--tilt)) translateY(var(--lift)) scale(var(--scale));
+  transition: transform 250ms cubic-bezier(0.34, 1.4, 0.4, 1), opacity 500ms ease;
+}
+
+.gift-box--1 {
+  --tilt: -5deg;
+}
+
+.gift-box--2 {
+  --tilt: 3deg;
+  --lift: -8px;
+}
+
+.gift-box--3 {
+  --tilt: -9deg;
+  --lift: 10px;
+}
+
+.gift-box:hover {
+  --scale: 1.06;
+}
+
+.gift-box:active {
+  --scale: 0.94;
+}
+
+.gift-box__shadow {
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  bottom: -10px;
+  height: 14px;
+  border-radius: 50%;
+  background: rgba(7, 4, 26, 0.5);
+  filter: blur(6px);
+}
+
+.gift-box__body {
+  position: absolute;
+  inset: 0;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: var(--shadow-soft);
+}
+
+.gift-box--1 .gift-box__body {
+  background: linear-gradient(160deg, var(--color-heart), var(--color-heart-soft));
+}
+
+.gift-box--2 .gift-box__body {
+  background: linear-gradient(160deg, var(--color-gold), #fff3d6);
+}
+
+.gift-box--3 .gift-box__body {
+  background: linear-gradient(160deg, var(--color-blush), var(--color-heart-soft));
+}
+
+.gift-box__ribbon-v {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 16%;
+  transform: translateX(-50%);
+  background: linear-gradient(180deg, #fff8ec, var(--color-gold));
+}
+
+.gift-box__ribbon-h {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 38%;
+  height: 16%;
+  background: linear-gradient(90deg, #fff8ec, var(--color-gold));
+}
+
+.gift-box__bow {
+  position: absolute;
+  top: calc(38% - 9px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 34px;
+  height: 18px;
+}
+
+.gift-box__bow::before,
+.gift-box__bow::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  width: 16px;
+  height: 16px;
+  border-radius: 50% 50% 50% 0;
+  background: var(--color-gold);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.25) inset;
+}
+
+.gift-box__bow::before {
+  left: 0;
+  transform: rotate(-45deg);
+}
+
+.gift-box__bow::after {
+  right: 0;
+  transform: rotate(135deg);
+}
+
+.gift-box.is-chosen {
+  animation: gift-chosen-pop 650ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.gift-box.is-chosen .gift-box__body {
+  box-shadow: 0 0 0 4px rgba(var(--color-gold-rgb), 0.45), 0 20px 40px -10px rgba(var(--color-heart-rgb), 0.55);
+}
+
+@keyframes gift-chosen-pop {
+  0% {
+    transform: rotate(var(--tilt)) translateY(var(--lift)) scale(1);
+  }
+  45% {
+    transform: rotate(0deg) translateY(calc(var(--lift) - 16px)) scale(1.2);
+  }
+  100% {
+    transform: rotate(0deg) translateY(calc(var(--lift) - 6px)) scale(1.1);
+  }
+}
+
+.gift-box.is-fading {
+  opacity: 0;
+  transform: scale(0.85);
+  pointer-events: none;
+}
+
+/* ===== Màn video bí mật - tái dùng đúng công thức khung của memories
+   (width: min(100%, 380px, 42vh)) để không lặp lại bug tràn màn hình ngang đã
+   gặp ở css/memories.css. ===== */
+
+.gift-reveal-stage {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  opacity: 0;
+  transition: opacity 900ms ease;
+}
+
+.gift-reveal-stage.is-active {
+  display: flex;
+}
+
+.gift-reveal-stage.is-shown {
+  opacity: 1;
+}
+
+.gift-reveal-heading {
+  text-align: center;
+  margin-bottom: var(--space-md);
+}
+
+.gift-reveal-frame {
+  position: relative;
+  width: min(100%, 380px, 42vh);
+  aspect-ratio: 3 / 4;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: var(--shadow-soft);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.gift-reveal-slot {
+  position: absolute;
+  inset: 0;
+}
+
+.gift-reveal-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+@media (max-width: 420px) {
+  .gift-box {
+    width: 86px;
+    height: 86px;
+  }
+
+  .gift-boxes {
+    gap: clamp(1rem, 5vw, 2rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gift-box {
+    transition: opacity 400ms ease;
+  }
+
+  .gift-box.is-chosen {
+    animation: none;
+    transform: scale(1.08);
+  }
+}
