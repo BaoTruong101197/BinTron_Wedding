@@ -31,6 +31,7 @@ function bootstrap() {
   startGateEl.addEventListener(
     "click",
     () => {
+      console.log("start gate clicked, starting flow");
       startGateEl.classList.add("is-leaving");
       startGateEl.addEventListener("transitionend", () => startGateEl.remove(), { once: true });
       audioPlayer.start();
