@@ -242,14 +242,11 @@ function exit() {
   sceneContext?.audioPlayer.unduck();
 }
 
-function findFirstVideoSrc() {
-  for (const memory of CONFIG.memories) {
-    for (const src of memory.videos || []) {
-      if (src) return src;
-    }
-  }
-  return null;
-}
+// Clip câm, 0.5s, ~2.5KB - chỉ để "mượn" 1 cử chỉ thật nhằm mở khoá quyền
+// autoplay có tiếng cho videoEl, không phải tải luôn video kỉ niệm thật (vài
+// chục MB) ngay lúc bấm nút - tránh tranh băng thông mobile với nhạc nền đang
+// tải cùng lúc.
+const UNLOCK_SRC = "assets/media/unlock.mp4";
 
 /**
  * Phải gọi hàm này BÊN TRONG cùng 1 cử chỉ chạm/click thật của người dùng
@@ -257,13 +254,13 @@ function findFirstVideoSrc() {
  * khác. Trình duyệt mobile chỉ cấp quyền "autoplay có tiếng không cần cử chỉ
  * mới" cho ĐÚNG element <video> đã từng play() thành công nhờ 1 cử chỉ thật;
  * quyền này gắn với chính element (persistent, không bị tạo lại mỗi bước ở
- * playVideoStep) nên chỉ cần mở khoá 1 lần ở đây là đủ cho mọi video sau này.
+ * playVideoStep), và không phụ thuộc vào src lúc mở khoá có phải video thật
+ * hay không - nên chỉ cần mở khoá 1 lần bằng clip câm này là đủ cho mọi video
+ * kỉ niệm thật phát sau đó.
  */
 function unlockVideo() {
-  const src = findFirstVideoSrc();
-  if (!src) return;
   videoEl.muted = false;
-  videoEl.src = src;
+  videoEl.src = UNLOCK_SRC;
   const playPromise = videoEl.play();
   if (playPromise && typeof playPromise.then === "function") {
     playPromise.then(() => videoEl.pause()).catch(() => {});

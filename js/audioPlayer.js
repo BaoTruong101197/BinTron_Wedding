@@ -9,13 +9,22 @@ class AudioPlayer {
     this._fadeRafId = null;
 
     this.audioEl.volume = volume;
+
+    // Gán src + preload ngay từ lúc khởi tạo (còn đang ở màn start-gate) thay
+    // vì đợi tới lúc bấm nút mới set src - để trình duyệt kịp tải sẵn nhạc nền
+    // trong lúc người xem còn đang ở màn chờ. Nếu chỉ tải lúc bấm nút, tốc độ
+    // mạng di động lúc đó quyết định nhạc trễ bao lâu (đôi khi rất trễ).
+    if (this.src) {
+      this.audioEl.preload = "auto";
+      this.audioEl.src = this.src;
+      this.audioEl.load();
+    }
   }
 
   start() {
     if (this.started || !this.src) return;
     this.started = true;
 
-    this.audioEl.src = this.src;
     this._attemptPlay();
   }
 
