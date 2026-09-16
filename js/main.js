@@ -34,6 +34,7 @@ function bootstrap() {
       startGateEl.classList.add("is-leaving");
       startGateEl.addEventListener("transitionend", () => startGateEl.remove(), { once: true });
       audioPlayer.start();
+      Scenes.memories.unlockVideo?.();
       sceneManager.start();
     },
     { once: true }

@@ -4,6 +4,9 @@ const TRANSITION_MS = 900; // phải khớp với transition trong memories.css
 let captionEntries = [];
 let mediaWrapEl;
 let mediaSlotEl;
+let placeholderEl;
+let videoEl;
+let videoEndedHandler = null;
 let counterEl;
 let textEntries = [];
 let index = 0;
@@ -18,10 +21,8 @@ function placeholderMarkup(memIndex, videoIndex, totalVideos) {
       ? `Kỉ niệm ${memIndex + 1} — Video ${videoIndex + 1}/${totalVideos}`
       : `Kỉ niệm ${memIndex + 1} — Video`;
   return `
-    <div class="memory-placeholder">
-      <span class="memory-placeholder__icon">🎬</span>
-      <span class="memory-placeholder__label">${label}</span>
-    </div>
+    <span class="memory-placeholder__icon">🎬</span>
+    <span class="memory-placeholder__label">${label}</span>
   `;
 }
 
@@ -48,6 +49,18 @@ function buildDom(container) {
   mediaSlotEl = container.querySelector("#memories-media-slot");
   counterEl = container.querySelector("#memories-count");
   const textColEl = container.querySelector("#memories-text-col");
+
+  // Placeholder và video được dựng SẴN 1 lần và tái sử dụng cho mọi kỉ niệm
+  // (thay vì innerHTML mỗi bước) - vì mobile chỉ cho phát video có tiếng
+  // không cần cử chỉ mới nếu đó là ĐÚNG element đã từng được play() bên trong
+  // 1 cử chỉ người dùng thật (xem unlockVideo() + main.js). Tạo <video> mới
+  // mỗi lần như trước sẽ luôn bị coi là chưa từng qua cử chỉ nào.
+  mediaSlotEl.innerHTML = `
+    <div class="memory-placeholder" id="memories-placeholder" hidden></div>
+    <video class="memory-media" id="memories-video" playsinline hidden></video>
+  `;
+  placeholderEl = mediaSlotEl.querySelector("#memories-placeholder");
+  videoEl = mediaSlotEl.querySelector("#memories-video");
 
   captionEntries = [];
   textEntries = [];
@@ -89,9 +102,9 @@ function showMediaAndText(i) {
 function hideMediaAndText(i) {
   mediaWrapEl.classList.remove("is-active");
   textEntries[i].classList.remove("is-active");
-  const video = mediaSlotEl.querySelector("video");
-  if (video) video.pause();
-  mediaSlotEl.innerHTML = "";
+  videoEl.pause();
+  videoEl.hidden = true;
+  placeholderEl.hidden = true;
 }
 
 /**
@@ -112,6 +125,13 @@ function playVideoStep(i, videoIndex, onItemDone) {
   const token = (stepToken += 1);
   const src = videos[videoIndex];
 
+  videoEl.pause();
+  videoEl.hidden = true;
+  if (videoEndedHandler) {
+    videoEl.removeEventListener("ended", videoEndedHandler);
+    videoEndedHandler = null;
+  }
+
   if (!src) {
     // Chưa có video thật - dùng khung placeholder, giả lập "phát xong" bằng
     // timer. Không có tiếng thật nào để nhường chỗ nên không cần hạ nhạc nền.
@@ -119,10 +139,13 @@ function playVideoStep(i, videoIndex, onItemDone) {
       if (cancelled || token !== stepToken) return;
       playVideoStep(i, videoIndex + 1, onItemDone);
     };
-    mediaSlotEl.innerHTML = placeholderMarkup(i, videoIndex, videos.length);
+    placeholderEl.innerHTML = placeholderMarkup(i, videoIndex, videos.length);
+    placeholderEl.hidden = false;
     timeoutId = setTimeout(goNext, CONFIG.timing.memoryPlaceholderDuration);
     return;
   }
+
+  placeholderEl.hidden = true;
 
   // Video thật có tiếng riêng - hạ nhạc nền xuống để tiếng video là tiếng chủ
   // đạo, trả lại âm lượng gốc ngay khi video này phát xong.
@@ -134,9 +157,10 @@ function playVideoStep(i, videoIndex, onItemDone) {
     playVideoStep(i, videoIndex + 1, onItemDone);
   };
 
-  mediaSlotEl.innerHTML = `<video class="memory-media" playsinline></video>`;
-  const videoEl = mediaSlotEl.querySelector("video");
-  videoEl.addEventListener("ended", goNext, { once: true });
+  videoEndedHandler = goNext;
+  videoEl.addEventListener("ended", videoEndedHandler, { once: true });
+  videoEl.hidden = false;
+  videoEl.muted = false;
   videoEl.src = src;
 
   const playPromise = videoEl.play();
@@ -198,7 +222,9 @@ function enter(context, advance) {
   captionEntries.forEach((el) => el.classList.remove("is-shown"));
   textEntries.forEach((el) => el.classList.remove("is-active"));
   mediaWrapEl.classList.remove("is-active");
-  mediaSlotEl.innerHTML = "";
+  videoEl.pause();
+  videoEl.hidden = true;
+  placeholderEl.hidden = true;
   playItem(0, advance);
 }
 
@@ -206,13 +232,46 @@ function exit() {
   cancelled = true;
   stepToken += 1;
   clearTimeout(timeoutId);
-  const video = mediaSlotEl && mediaSlotEl.querySelector("video");
-  if (video) video.pause();
+  videoEl.pause();
+  if (videoEndedHandler) {
+    videoEl.removeEventListener("ended", videoEndedHandler);
+    videoEndedHandler = null;
+  }
   // Phòng khi thoát scene giữa lúc 1 video đang hạ nhạc nền dở - trả lại âm
   // lượng gốc ngay, không để nhạc bị kẹt ở mức nhỏ sang tận scene sau.
   sceneContext?.audioPlayer.unduck();
 }
 
+function findFirstVideoSrc() {
+  for (const memory of CONFIG.memories) {
+    for (const src of memory.videos || []) {
+      if (src) return src;
+    }
+  }
+  return null;
+}
+
+/**
+ * Phải gọi hàm này BÊN TRONG cùng 1 cử chỉ chạm/click thật của người dùng
+ * (vd. handler click của start-gate) - không qua setTimeout/promise chain nào
+ * khác. Trình duyệt mobile chỉ cấp quyền "autoplay có tiếng không cần cử chỉ
+ * mới" cho ĐÚNG element <video> đã từng play() thành công nhờ 1 cử chỉ thật;
+ * quyền này gắn với chính element (persistent, không bị tạo lại mỗi bước ở
+ * playVideoStep) nên chỉ cần mở khoá 1 lần ở đây là đủ cho mọi video sau này.
+ */
+function unlockVideo() {
+  const src = findFirstVideoSrc();
+  if (!src) return;
+  videoEl.muted = false;
+  videoEl.src = src;
+  const playPromise = videoEl.play();
+  if (playPromise && typeof playPromise.then === "function") {
+    playPromise.then(() => videoEl.pause()).catch(() => {});
+  } else {
+    videoEl.pause();
+  }
+}
+
 window.Scenes = window.Scenes || {};
-window.Scenes.memories = { init, enter, exit };
+window.Scenes.memories = { init, enter, exit, unlockVideo };
 })();

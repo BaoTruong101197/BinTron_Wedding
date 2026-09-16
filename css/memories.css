@@ -100,6 +100,11 @@
   display: block;
 }
 
+.memory-media[hidden],
+.memory-placeholder[hidden] {
+  display: none;
+}
+
 .memory-placeholder {
   display: flex;
   flex-direction: column;
